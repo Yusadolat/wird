@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Privacy Policy — Wird</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', sans-serif;
+      background: #0D1B2A;
+      color: #8FA3B8;
+      line-height: 1.7;
+    }
+    .container { max-width: 720px; margin: 0 auto; padding: 48px 24px 64px; }
+    h1 {
+      font-size: 42px;
+      font-weight: 700;
+      color: #F0EDE6;
+      text-align: center;
+      margin-bottom: 8px;
+    }
+    .updated {
+      text-align: center;
+      font-size: 14px;
+      color: #5A7085;
+      margin-bottom: 16px;
+    }
+    .intro {
+      text-align: center;
+      font-size: 16px;
+      margin-bottom: 48px;
+      color: #8FA3B8;
+    }
+    h2 {
+      font-size: 20px;
+      font-weight: 700;
+      color: #F0EDE6;
+      margin: 40px 0 12px;
+    }
+    p, ul { margin-bottom: 16px; font-size: 15px; }
+    ul { padding-left: 24px; }
+    li { margin-bottom: 8px; }
+    a { color: #C8A96E; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    .footer {
+      text-align: center;
+      font-size: 12px;
+      color: #5A7085;
+      margin-top: 64px;
+      padding-top: 24px;
+      border-top: 1px solid #2A3F55;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Privacy Policy</h1>
+    <p class="updated">Last updated: April 10, 2026</p>
+    <p class="intro">Wird is committed to protecting your privacy. This policy explains what data we collect, how we use it, and your rights.</p>
+
+    <h2>1. Information We Collect</h2>
+    <p>Wird collects the minimum data necessary to provide a personalized Quran reading experience:</p>
+    <ul>
+      <li><strong>Account Data:</strong> When you sign in with Quran.com, we receive your display name, email address, and a unique user ID.</li>
+      <li><strong>Reading Preferences:</strong> Your chosen reading level, preferred reciter, notification time, and daily wird goal.</li>
+      <li><strong>Reading Progress:</strong> Session history, bookmarks, reflection notes, and streak data to track your journey.</li>
+      <li><strong>Device Information:</strong> Basic device identifiers for crash reporting via Sentry.</li>
+    </ul>
+    <p>We do not collect location data, contacts, or any data unrelated to your Quran reading experience.</p>
+
+    <h2>2. How We Use Your Data</h2>
+    <p>Your data is used exclusively to:</p>
+    <ul>
+      <li>Generate your personalized daily Quran reading plan</li>
+      <li>Sync your reading progress and preferences across devices via Supabase</li>
+      <li>Provide AI-powered reflection questions based on your reading sessions</li>
+      <li>Send optional daily reading reminders at your chosen time</li>
+      <li>Monitor app stability and fix crashes (Sentry)</li>
+    </ul>
+    <p>We never sell, rent, or share your personal data with third parties for marketing purposes.</p>
+
+    <h2>3. Third-Party Services</h2>
+    <p>Wird integrates with the following third-party services:</p>
+    <ul>
+      <li><strong>Quran.com API:</strong> Provides verse text, translations, audio recitations, and tafsir content. Subject to Quran.com's privacy policy.</li>
+      <li><strong>Quran.com OAuth:</strong> Handles authentication. We receive only the data you authorize.</li>
+      <li><strong>Supabase:</strong> Cloud database for optional cross-device sync. Data is encrypted in transit and at rest.</li>
+      <li><strong>Sentry:</strong> Error tracking service that receives anonymized crash reports.</li>
+      <li><strong>Google AI (Gemini):</strong> Generates reflection questions from tafsir content. No personal data is sent — only verse references and tafsir text.</li>
+    </ul>
+
+    <h2>4. Data Storage &amp; Security</h2>
+    <ul>
+      <li><strong>Local Storage:</strong> Your preferences and reading history are stored locally on your device using encrypted AsyncStorage.</li>
+      <li><strong>Cloud Sync:</strong> If you sign in, your data is synced to Supabase with row-level security policies. Only you can access your data.</li>
+      <li><strong>Data Retention:</strong> Your data is retained as long as you have an active account. You may delete your data at any time.</li>
+      <li><strong>Security:</strong> All data transmissions use HTTPS/TLS encryption.</li>
+    </ul>
+
+    <h2>5. Your Rights</h2>
+    <p>You have the right to:</p>
+    <ul>
+      <li><strong>Access:</strong> View all data we store about you.</li>
+      <li><strong>Correction:</strong> Update your preferences and profile at any time.</li>
+      <li><strong>Deletion:</strong> Delete your account and all associated data from the Settings screen or by contacting us.</li>
+      <li><strong>Portability:</strong> Request a copy of your data in a standard format.</li>
+      <li><strong>Opt-Out:</strong> Use the app in guest mode without creating an account. Guest mode stores data only on your device.</li>
+    </ul>
+
+    <h2>6. Children's Privacy</h2>
+    <p>Wird is suitable for users of all ages. We do not knowingly collect personal information from children under 13 without parental consent. If you believe a child has provided personal data, please contact us and we will promptly delete it.</p>
+
+    <h2>7. Changes to This Policy</h2>
+    <p>We may update this Privacy Policy from time to time. Changes will be posted within the app and on our website. Your continued use of Wird after changes constitutes acceptance of the updated policy.</p>
+
+    <h2>8. Contact Us</h2>
+    <p>If you have questions about this Privacy Policy or wish to exercise your data rights, please contact us at:</p>
+    <ul>
+      <li>Email: <a href="mailto:privacy@wird.app">privacy@wird.app</a></li>
+      <li>GitHub: <a href="https://github.com/wird-app">github.com/wird-app</a></li>
+    </ul>
+
+    <div class="footer">
+      &copy; 2026 Wird. Built for the Quran Foundation Hackathon.
+    </div>
+  </div>
+</body>
+</html>

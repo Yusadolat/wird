@@ -1,0 +1,67 @@
+{
+  "expo": {
+    "name": "Wird",
+    "slug": "wird",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#0b1526"
+    },
+    "scheme": "wird",
+    "plugins": [
+      "expo-router",
+      "expo-secure-store",
+      "expo-notifications",
+      "expo-font",
+      "expo-web-browser",
+      "expo-audio",
+      "expo-asset"
+    ],
+    "experiments": {
+      "reactCompiler": true
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.prontoville.wird"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "monochromeImage": "./assets/adaptive-icon-monochrome.png",
+        "backgroundColor": "#0b1526"
+      },
+      "predictiveBackGestureEnabled": false,
+      "package": "com.prontoville.wird",
+      "permissions": [
+        "android.permission.RECORD_AUDIO",
+        "android.permission.MODIFY_AUDIO_SETTINGS",
+        "android.permission.FOREGROUND_SERVICE",
+        "android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK",
+        "android.permission.RECORD_AUDIO",
+        "android.permission.MODIFY_AUDIO_SETTINGS",
+        "android.permission.FOREGROUND_SERVICE",
+        "android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK"
+      ]
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "29314a54-dfa4-43e0-8938-aaed6a70dbfe"
+      }
+    },
+    "owner": "yusadolat",
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/29314a54-dfa4-43e0-8938-aaed6a70dbfe"
+    }
+  }
+}
