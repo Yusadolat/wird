@@ -1,3 +1,6 @@
+import { config } from "./config";
+import { captureException } from "./sentry";
+
 type AsyncLikeStorage = {
   getItem: (key: string) => Promise<string | null>;
   setItem: (key: string, value: string) => Promise<void>;
@@ -40,6 +43,10 @@ export function getPersistenceStorage(): AsyncLikeStorage {
       return resolvedStorage;
     }
   } catch (error) {
+    if (config.sentryCaptureHandled) {
+      captureException(error, { tags: { area: "persistence", action: "load_async_storage" } });
+    }
+
     if (__DEV__ && !didWarn) {
       didWarn = true;
       console.log(

@@ -29,6 +29,10 @@ export const config = {
   enableSupabaseSync:
     (process.env.EXPO_PUBLIC_ENABLE_SUPABASE_SYNC ?? "false") === "true",
   sentryDsn: process.env.EXPO_PUBLIC_SENTRY_DSN ?? null,
+  sentryCaptureHandled:
+    (process.env.EXPO_PUBLIC_SENTRY_CAPTURE_HANDLED ?? "true") === "true",
+  sentrySmokeTest:
+    (process.env.EXPO_PUBLIC_SENTRY_SMOKE_TEST ?? "false") === "true",
   useProduction:
     (process.env.EXPO_PUBLIC_QF_USE_PRODUCTION ?? "false") === "true",
 } as const;

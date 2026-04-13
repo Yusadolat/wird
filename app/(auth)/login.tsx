@@ -6,6 +6,7 @@ import { ActivityIndicator, Pressable, StyleSheet, Text, View } from "react-nati
 import { SafeAreaView } from "react-native-safe-area-context";
 import { colors } from "../../constants/theme";
 import { config } from "../../lib/config";
+import { captureException } from "../../lib/sentry";
 import {
   createQuranNonce,
   getQuranAuthDebugInfo,
@@ -79,6 +80,12 @@ export default function LoginScreen() {
           console.log("[Quran OAuth] built auth url", builtAuthUrl);
         }
       } catch (error) {
+      if (config.sentryCaptureHandled) {
+        captureException(error, {
+          tags: { area: "auth", action: "oauth_build_auth_url" },
+        });
+      }
+
         if (__DEV__) {
           console.log("[Quran OAuth] failed to build auth url", error);
         }
@@ -143,6 +150,12 @@ export default function LoginScreen() {
       await finishSignIn(session);
       router.replace("/(onboarding)/goal");
     } catch (error) {
+      if (config.sentryCaptureHandled) {
+        captureException(error, {
+          tags: { area: "auth", action: "oauth_exchange_code" },
+        });
+      }
+
       if (__DEV__) {
         console.log("[Quran OAuth] exchange failure", error);
       }

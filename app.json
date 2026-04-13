@@ -19,7 +19,15 @@
       "expo-font",
       "expo-web-browser",
       "expo-audio",
-      "expo-asset"
+      "expo-asset",
+      [
+        "@sentry/react-native/expo",
+        {
+          "url": "https://sentry.io/",
+          "project": "wird",
+          "organization": "prontoville"
+        }
+      ]
     ],
     "experiments": {
       "reactCompiler": true

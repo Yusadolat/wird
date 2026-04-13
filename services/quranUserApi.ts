@@ -2,6 +2,7 @@ import { getQuranClientId } from "./quranAuthService";
 import { useAuthStore } from "../store/authStore";
 import type { BookmarkRecord, ReadingSessionRecord } from "../types/appData";
 import { config } from "../lib/config";
+import { captureException } from "../lib/sentry";
 
 const PRODUCTION_USER_API_BASE_URL = "https://apis.quran.foundation/auth/v1";
 const PRELIVE_USER_API_BASE_URL = "https://apis-prelive.quran.foundation/auth/v1";
@@ -95,6 +96,12 @@ async function quranUserRequest<T>(
 }
 
 function logQuranUserSyncFailure(action: string, error: unknown) {
+  if (config.sentryCaptureHandled) {
+    captureException(error, {
+      tags: { area: "quran_user_api", action },
+    });
+  }
+
   if (__DEV__) {
     console.log(`[Quran User API] ${action} failed`, error);
   }

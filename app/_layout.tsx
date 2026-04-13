@@ -6,23 +6,34 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import * as Notifications from "expo-notifications";
 import * as Sentry from "@sentry/react-native";
+import Constants from "expo-constants";
 
 import { colors } from "../constants/theme";
 import { config } from "../lib/config";
+import { captureException, flush } from "../lib/sentry";
 import { useAppDataStore } from "../store/appDataStore";
 import { useAuthStore } from "../store/authStore";
 import { useOnboardingStore } from "../store/onboardingStore";
 import { useSettingsStore } from "../store/settingsStore";
 
-if (config.sentryDsn && !__DEV__) {
+const sentryEnvironment =
+  (Constants.expoConfig?.extra?.eas as { channel?: string } | undefined)?.channel ??
+  (__DEV__ ? "development" : "production");
+
+if (config.sentryDsn) {
+  (Sentry as unknown as { enableInExpoDevelopment?: boolean }).enableInExpoDevelopment =
+    true;
+
   Sentry.init({
     dsn: config.sentryDsn,
     enableNative: true,
-    tracesSampleRate: 0.2,
+    debug: __DEV__,
+    environment: sentryEnvironment,
+    tracesSampleRate: 1,
   });
 }
 
-export default function RootLayout() {
+export default Sentry.wrap(function RootLayout() {
   const segments = useSegments();
   const hydrateSession = useAuthStore((state) => state.hydrateSession);
   const hydrateAppData = useAppDataStore((state) => state.hydrateRemote);
@@ -42,6 +53,19 @@ export default function RootLayout() {
   useEffect(() => {
     void hydrateSession();
   }, [hydrateSession]);
+
+  useEffect(() => {
+    if (!__DEV__ || !config.sentrySmokeTest) {
+      return;
+    }
+
+    captureException(new Error("Sentry smoke test (dev)"), {
+      tags: { area: "sentry", action: "smoke_test" },
+      extra: { environment: sentryEnvironment },
+    });
+
+    void flush();
+  }, []);
 
   useEffect(() => {
     Notifications.setNotificationHandler({
@@ -122,4 +146,4 @@ export default function RootLayout() {
       </SafeAreaProvider>
     </GestureHandlerRootView>
   );
-}
+});

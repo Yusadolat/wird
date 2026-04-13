@@ -6,12 +6,14 @@ import type {
   SettingsSyncPayload,
 } from "../types/appData";
 import { ensureSupabaseSession, supabase } from "../lib/supabase";
+import { captureException } from "../lib/sentry";
 import {
   createQuranBookmark,
   removeQuranBookmarkByVerseKey,
   syncQuranActivityDay,
   syncQuranReadingSession,
 } from "./quranUserApi";
+import { config } from "../lib/config";
 
 async function withUserId<T extends Record<string, unknown>>(payload: T) {
   const session = await ensureSupabaseSession();
@@ -27,6 +29,12 @@ async function withUserId<T extends Record<string, unknown>>(payload: T) {
 }
 
 function logSyncFailure(action: string, error: unknown) {
+  if (config.sentryCaptureHandled) {
+    captureException(error, {
+      tags: { area: "supabase_sync", action },
+    });
+  }
+
   if (__DEV__) {
     console.log(`[Supabase Sync] ${action} failed`, error);
   }

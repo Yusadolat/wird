@@ -49,3 +49,5 @@ supabase/.temp/
 # generated native folders
 /ios
 /android
+
+.env.local

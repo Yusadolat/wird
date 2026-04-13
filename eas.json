@@ -4,8 +4,25 @@
     "appVersionSource": "remote"
   },
   "build": {
+    "preview": {
+      "distribution": "internal",
+      "env": {
+        "EXPO_PUBLIC_OAUTH_REDIRECT_SCHEME": "wird",
+        "EXPO_PUBLIC_OAUTH_REDIRECT_URI": "wird://auth/callback",
+        "SENTRY_ORG": "prontoville",
+        "SENTRY_PROJECT": "wird"
+      },
+      "android": {
+        "buildType": "apk"
+      },
+      "channel": "preview"
+    },
     "internal": {
       "distribution": "internal",
+      "env": {
+        "SENTRY_ORG": "prontoville",
+        "SENTRY_PROJECT": "wird"
+      },
       "android": {
         "buildType": "app-bundle"
       },
@@ -13,6 +30,10 @@
     },
     "production": {
       "autoIncrement": true,
+      "env": {
+        "SENTRY_ORG": "prontoville",
+        "SENTRY_PROJECT": "wird"
+      },
       "android": {
         "buildType": "app-bundle"
       },
