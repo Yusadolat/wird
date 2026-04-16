@@ -7,8 +7,11 @@
     "preview": {
       "distribution": "internal",
       "env": {
+        "EXPO_PUBLIC_ENABLE_SUPABASE_SYNC": "true",
         "EXPO_PUBLIC_OAUTH_REDIRECT_SCHEME": "wird",
         "EXPO_PUBLIC_OAUTH_REDIRECT_URI": "wird://auth/callback",
+        "EXPO_PUBLIC_SUPABASE_ANON_KEY": "sb_publishable_gLRLV1x2DuivcGprS1mlXw_tU2s5vS1",
+        "EXPO_PUBLIC_SUPABASE_URL": "https://mmtfejjleppwzolvyyvm.supabase.co",
         "SENTRY_ORG": "prontoville",
         "SENTRY_PROJECT": "wird"
       },
@@ -20,6 +23,9 @@
     "internal": {
       "distribution": "internal",
       "env": {
+        "EXPO_PUBLIC_ENABLE_SUPABASE_SYNC": "true",
+        "EXPO_PUBLIC_SUPABASE_ANON_KEY": "sb_publishable_gLRLV1x2DuivcGprS1mlXw_tU2s5vS1",
+        "EXPO_PUBLIC_SUPABASE_URL": "https://mmtfejjleppwzolvyyvm.supabase.co",
         "SENTRY_ORG": "prontoville",
         "SENTRY_PROJECT": "wird"
       },
@@ -31,6 +37,9 @@
     "production": {
       "autoIncrement": true,
       "env": {
+        "EXPO_PUBLIC_ENABLE_SUPABASE_SYNC": "true",
+        "EXPO_PUBLIC_SUPABASE_ANON_KEY": "sb_publishable_gLRLV1x2DuivcGprS1mlXw_tU2s5vS1",
+        "EXPO_PUBLIC_SUPABASE_URL": "https://mmtfejjleppwzolvyyvm.supabase.co",
         "SENTRY_ORG": "prontoville",
         "SENTRY_PROJECT": "wird"
       },
@@ -44,7 +53,7 @@
     "internal": {},
     "production": {
       "android": {
-        "track": "open"
+        "track": "beta"
       }
     }
   }

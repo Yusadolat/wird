@@ -7,6 +7,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { colors } from "../../constants/theme";
 import { config } from "../../lib/config";
 import { captureException } from "../../lib/sentry";
+import { clearPendingAuth, savePendingAuth } from "../../services/authStorage";
 import {
   createQuranNonce,
   getQuranAuthDebugInfo,
@@ -141,6 +142,7 @@ export default function LoginScreen() {
         code,
         codeVerifier,
       });
+      await clearPendingAuth();
       if (__DEV__) {
         console.log("[Quran OAuth] exchange success", {
           userId: session.userId,
@@ -150,6 +152,8 @@ export default function LoginScreen() {
       await finishSignIn(session);
       router.replace("/(onboarding)/goal");
     } catch (error) {
+      await clearPendingAuth();
+
       if (config.sentryCaptureHandled) {
         captureException(error, {
           tags: { area: "auth", action: "oauth_exchange_code" },
@@ -175,9 +179,20 @@ export default function LoginScreen() {
       return;
     }
 
+    if (!request) {
+      setAuthenticating(false);
+      setAuthError("Quran.com sign-in is still preparing. Try again.");
+      return;
+    }
+
+    if (request.codeVerifier) {
+      await savePendingAuth({ codeVerifier: request.codeVerifier });
+    }
+
     resetOnboarding();
     setAuthError(null);
     setAuthenticating(true);
+
     const result = await promptAsync();
 
     if (__DEV__) {
@@ -190,6 +205,7 @@ export default function LoginScreen() {
     }
 
     if (result.type === "dismiss" || result.type === "cancel") {
+      await clearPendingAuth();
       setAuthenticating(false);
     }
   }

@@ -65,7 +65,7 @@ export async function exchangeQuranCode(params: {
 }) {
   if (!supabase) {
     throw new Error(
-      "Supabase is not configured. Quran auth exchange is no longer routed through localhost.",
+      "Supabase public config is missing in this build. Quran auth exchange is no longer routed through localhost.",
     );
   }
 

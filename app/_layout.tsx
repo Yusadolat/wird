@@ -46,7 +46,10 @@ export default Sentry.wrap(function RootLayout() {
   );
 
   const topLevelSegment = segments[0];
+  const secondSegment = segments.at(1);
   const isAuthRoute = topLevelSegment === "(auth)";
+  const isOAuthCallbackRoute =
+    topLevelSegment === "auth" && secondSegment === "callback";
   const isOnboardingRoute = topLevelSegment === "(onboarding)";
   const isSignedIn = isGuest || Boolean(userId);
 
@@ -104,7 +107,7 @@ export default Sentry.wrap(function RootLayout() {
     );
   }
 
-  if (!isSignedIn && !isAuthRoute) {
+  if (!isSignedIn && !isAuthRoute && !isOAuthCallbackRoute) {
     return <Redirect href="/(auth)/login" />;
   }
 
@@ -135,6 +138,7 @@ export default Sentry.wrap(function RootLayout() {
         >
           <Stack.Screen name="index" />
           <Stack.Screen name="(auth)/login" />
+          <Stack.Screen name="auth/callback" />
           <Stack.Screen name="(onboarding)/goal" />
           <Stack.Screen name="(onboarding)/schedule" />
           <Stack.Screen name="(onboarding)/level" />

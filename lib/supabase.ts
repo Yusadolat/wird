@@ -7,7 +7,7 @@ import { config } from "./config";
 import { getPersistenceStorage } from "./persistenceStorage";
 
 export const isSupabaseConfigured = Boolean(
-  config.enableSupabaseSync && config.supabaseUrl && config.supabaseAnonKey,
+  config.supabaseUrl && config.supabaseAnonKey,
 );
 
 export const supabase = isSupabaseConfigured

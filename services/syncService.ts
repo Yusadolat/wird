@@ -15,7 +15,15 @@ import {
 } from "./quranUserApi";
 import { config } from "../lib/config";
 
+function isSupabaseSyncDisabled() {
+  return !config.enableSupabaseSync || !supabase;
+}
+
 async function withUserId<T extends Record<string, unknown>>(payload: T) {
+  if (isSupabaseSyncDisabled()) {
+    return null;
+  }
+
   const session = await ensureSupabaseSession();
 
   if (!session?.user?.id) {
@@ -105,7 +113,9 @@ function mapRemoteReflectionNote(record: {
 }
 
 export async function syncSettings(settings: SettingsSyncPayload) {
-  if (!supabase) {
+  const client = supabase;
+
+  if (isSupabaseSyncDisabled() || !client) {
     return;
   }
 
@@ -121,7 +131,7 @@ export async function syncSettings(settings: SettingsSyncPayload) {
       return;
     }
 
-    const { error } = await supabase.from("user_preferences").upsert(payload);
+    const { error } = await client.from("user_preferences").upsert(payload);
 
     if (error) {
       logSyncFailure("settings upsert", error.message);
@@ -132,7 +142,9 @@ export async function syncSettings(settings: SettingsSyncPayload) {
 }
 
 export async function fetchRemoteSettings() {
-  if (!supabase) {
+  const client = supabase;
+
+  if (isSupabaseSyncDisabled() || !client) {
     return null;
   }
 
@@ -143,7 +155,7 @@ export async function fetchRemoteSettings() {
       return null;
     }
 
-    const { data, error } = await supabase
+    const { data, error } = await client
       .from("user_preferences")
       .select("*")
       .eq("user_id", session.user.id)
@@ -170,7 +182,9 @@ export async function syncBookmark(bookmark: BookmarkRecord) {
 }
 
 async function syncBookmarkToSupabase(bookmark: BookmarkRecord) {
-  if (!supabase) {
+  const client = supabase;
+
+  if (isSupabaseSyncDisabled() || !client) {
     return;
   }
 
@@ -187,7 +201,7 @@ async function syncBookmarkToSupabase(bookmark: BookmarkRecord) {
       return;
     }
 
-    const { error } = await supabase.from("bookmarks").upsert(payload);
+    const { error } = await client.from("bookmarks").upsert(payload);
 
     if (error) {
       logSyncFailure("bookmark upsert", error.message);
@@ -198,7 +212,9 @@ async function syncBookmarkToSupabase(bookmark: BookmarkRecord) {
 }
 
 export async function removeSyncedBookmark(id: string) {
-  if (!supabase) {
+  const client = supabase;
+
+  if (isSupabaseSyncDisabled() || !client) {
     return;
   }
 
@@ -209,7 +225,7 @@ export async function removeSyncedBookmark(id: string) {
       return;
     }
 
-    const { error } = await supabase
+    const { error } = await client
       .from("bookmarks")
       .delete()
       .eq("id", id)
@@ -243,7 +259,9 @@ export async function syncReadingSession(session: ReadingSessionRecord) {
 }
 
 async function syncReadingSessionToSupabase(session: ReadingSessionRecord) {
-  if (!supabase) {
+  const client = supabase;
+
+  if (isSupabaseSyncDisabled() || !client) {
     return;
   }
 
@@ -263,7 +281,7 @@ async function syncReadingSessionToSupabase(session: ReadingSessionRecord) {
       return;
     }
 
-    const { error } = await supabase.from("reading_sessions").upsert(payload);
+    const { error } = await client.from("reading_sessions").upsert(payload);
 
     if (error) {
       logSyncFailure("reading session upsert", error.message);
@@ -274,7 +292,9 @@ async function syncReadingSessionToSupabase(session: ReadingSessionRecord) {
 }
 
 export async function syncReflectionNote(note: ReflectionNoteRecord) {
-  if (!supabase) {
+  const client = supabase;
+
+  if (isSupabaseSyncDisabled() || !client) {
     return;
   }
 
@@ -296,7 +316,7 @@ export async function syncReflectionNote(note: ReflectionNoteRecord) {
       return;
     }
 
-    const { error } = await supabase.from("reflection_notes").upsert(payload);
+    const { error } = await client.from("reflection_notes").upsert(payload);
 
     if (error) {
       logSyncFailure("reflection note upsert", error.message);
@@ -307,7 +327,9 @@ export async function syncReflectionNote(note: ReflectionNoteRecord) {
 }
 
 export async function fetchRemoteAppData(): Promise<RemoteAppData | null> {
-  if (!supabase) {
+  const client = supabase;
+
+  if (isSupabaseSyncDisabled() || !client) {
     return null;
   }
 
@@ -320,17 +342,17 @@ export async function fetchRemoteAppData(): Promise<RemoteAppData | null> {
 
     const [bookmarksResponse, sessionsResponse, reflectionsResponse] =
       await Promise.all([
-        supabase
+        client
           .from("bookmarks")
           .select("*")
           .eq("user_id", session.user.id)
           .order("created_at", { ascending: false }),
-        supabase
+        client
           .from("reading_sessions")
           .select("*")
           .eq("user_id", session.user.id)
           .order("completed_at", { ascending: false }),
-        supabase
+        client
           .from("reflection_notes")
           .select("*")
           .eq("user_id", session.user.id)
