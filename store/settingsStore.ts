@@ -8,14 +8,19 @@ import {
   fetchRemoteSettings,
   syncSettings,
 } from "../services/syncService";
-import { scheduleDailyWirdReminder } from "../services/notifications";
+import {
+  cancelDailyWirdReminder,
+  scheduleDailyWirdReminder,
+} from "../services/notifications";
 import type { ReadingLevel } from "../types/wird";
 
 type SettingsStore = {
+  notificationsEnabled: boolean;
   notificationTime: string;
   preferredReciter: number;
   readingLevel: ReadingLevel;
   hasLoadedRemote: boolean;
+  setNotificationsEnabled: (value: boolean) => void;
   setNotificationTime: (value: string) => void;
   setPreferredReciter: (value: number) => void;
   setReadingLevel: (value: ReadingLevel) => void;
@@ -25,10 +30,20 @@ type SettingsStore = {
 export const useSettingsStore = create<SettingsStore>()(
   persist(
     (set) => ({
+      notificationsEnabled: true,
       notificationTime: "18:30",
       preferredReciter: config.defaultReciterId,
       readingLevel: "intermediate",
       hasLoadedRemote: false,
+      setNotificationsEnabled: (notificationsEnabled) => {
+        set({ notificationsEnabled });
+        const state = useSettingsStore.getState();
+        if (notificationsEnabled) {
+          void scheduleDailyWirdReminder(state.notificationTime);
+        } else {
+          void cancelDailyWirdReminder();
+        }
+      },
       setNotificationTime: (notificationTime) => {
         set({ notificationTime });
         const state = useSettingsStore.getState();
@@ -37,7 +52,9 @@ export const useSettingsStore = create<SettingsStore>()(
           readingLevel: state.readingLevel,
           notificationTime,
         });
-        void scheduleDailyWirdReminder(notificationTime);
+        if (state.notificationsEnabled) {
+          void scheduleDailyWirdReminder(notificationTime);
+        }
       },
       setPreferredReciter: (preferredReciter) => {
         set({ preferredReciter });
@@ -78,7 +95,9 @@ export const useSettingsStore = create<SettingsStore>()(
           hasLoadedRemote: true,
         });
 
-        void scheduleDailyWirdReminder(remoteSettings.notificationTime);
+        if (useSettingsStore.getState().notificationsEnabled) {
+          void scheduleDailyWirdReminder(remoteSettings.notificationTime);
+        }
       },
     }),
     {

@@ -2,6 +2,7 @@ import { Feather } from "@expo/vector-icons";
 import { type BottomTabBarProps, BottomTabBar } from "@react-navigation/bottom-tabs";
 import { Tabs } from "expo-router";
 import { Pressable, StyleSheet, Text, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { colors } from "../../constants/theme";
 
@@ -20,8 +21,13 @@ const TAB_LABELS: Record<string, string> = {
 };
 
 function PillTabBar({ state, descriptors, navigation }: BottomTabBarProps) {
+  const insets = useSafeAreaInsets();
+  // On Android 3-button nav, insets.bottom is typically 0 but the system nav still
+  // sits beneath us; use a minimum floor so the pill clears either style of nav.
+  const bottomPadding = Math.max(insets.bottom, 16);
+
   return (
-    <View style={styles.tabContainer}>
+    <View style={[styles.tabContainer, { paddingBottom: bottomPadding }]}>
       <View style={styles.pill}>
         {state.routes.map((route, index) => {
           const isFocused = state.index === index;
@@ -84,15 +90,15 @@ const styles = StyleSheet.create({
   tabContainer: {
     paddingTop: 12,
     paddingHorizontal: 21,
-    paddingBottom: 21,
     backgroundColor: colors.bgPrimary,
   },
   pill: {
     flexDirection: "row",
-    height: 62,
+    height: 68,
     backgroundColor: colors.bgSecondary,
     borderRadius: 36,
-    padding: 4,
+    paddingHorizontal: 4,
+    paddingVertical: 6,
     borderWidth: 1,
     borderColor: colors.border,
   },
@@ -101,7 +107,8 @@ const styles = StyleSheet.create({
     borderRadius: 26,
     alignItems: "center",
     justifyContent: "center",
-    gap: 4,
+    gap: 6,
+    paddingVertical: 4,
   },
   tabActive: {
     backgroundColor: colors.accentPrimary,

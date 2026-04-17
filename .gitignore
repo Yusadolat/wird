@@ -38,7 +38,9 @@ yarn-error.*
 !.env.example
 
 # docs (local notes / drafts)
-docs/
+docs/*
+# Exception: submission-relevant API docs must be public for hackathon judges
+!docs/API_USAGE.md
 
 # Supabase local state
 supabase/.temp/

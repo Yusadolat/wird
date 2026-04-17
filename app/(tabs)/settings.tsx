@@ -1,5 +1,5 @@
 import { Feather } from "@expo/vector-icons";
-import { ScrollView, StyleSheet, Text, Pressable, View } from "react-native";
+import { ScrollView, StyleSheet, Switch, Text, Pressable, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 
@@ -125,6 +125,12 @@ export default function SettingsScreen() {
   const displayName = useAuthStore((state) => state.displayName);
   const email = useAuthStore((state) => state.email);
   const isGuest = useAuthStore((state) => state.isGuest);
+  const notificationsEnabled = useSettingsStore(
+    (state) => state.notificationsEnabled,
+  );
+  const setNotificationsEnabled = useSettingsStore(
+    (state) => state.setNotificationsEnabled,
+  );
   const notificationTime = useSettingsStore((state) => state.notificationTime);
   const preferredReciter = useSettingsStore((state) => state.preferredReciter);
   const readingLevel = useSettingsStore((state) => state.readingLevel);
@@ -200,39 +206,66 @@ export default function SettingsScreen() {
 
         <View style={styles.section}>
           <SectionHeader
-            icon="clock"
-            title="Reminder Time"
-            subtitle="Set the reading window you want the app to optimize for."
+            icon="bell"
+            title="Notifications"
+            subtitle="Gentle daily nudge — never guilt, never streak pressure."
           />
-          <View style={styles.timeGrid}>
-            {REMINDER_TIMES.map((slot) => {
-              const selected = notificationTime === slot.value;
-              return (
-                <Pressable
-                  key={slot.value}
-                  onPress={() => setNotificationTime(slot.value)}
-                  style={[styles.timeChip, selected && styles.timeChipSelected]}
-                >
-                  <Text
-                    style={[
-                      styles.timeChipLabel,
-                      selected && styles.timeChipLabelSelected,
-                    ]}
-                  >
-                    {slot.label}
-                  </Text>
-                  <Text
-                    style={[
-                      styles.timeChipValue,
-                      selected && styles.timeChipValueSelected,
-                    ]}
-                  >
-                    {slot.value}
-                  </Text>
-                </Pressable>
-              );
-            })}
+          <View style={styles.toggleCard}>
+            <View style={styles.toggleCopy}>
+              <Text style={styles.toggleTitle}>Daily reminder</Text>
+              <Text style={styles.toggleSubtitle}>
+                {notificationsEnabled
+                  ? `On — your Wird will greet you at ${notificationTime}.`
+                  : "Off — open the app on your own terms."}
+              </Text>
+            </View>
+            <Switch
+              value={notificationsEnabled}
+              onValueChange={setNotificationsEnabled}
+              trackColor={{
+                false: colors.border,
+                true: colors.accentPrimary,
+              }}
+              thumbColor={
+                notificationsEnabled ? colors.textInverse : colors.textMuted
+              }
+            />
           </View>
+
+          {notificationsEnabled ? (
+            <View style={styles.timeGrid}>
+              {REMINDER_TIMES.map((slot) => {
+                const selected = notificationTime === slot.value;
+                return (
+                  <Pressable
+                    key={slot.value}
+                    onPress={() => setNotificationTime(slot.value)}
+                    style={[
+                      styles.timeChip,
+                      selected && styles.timeChipSelected,
+                    ]}
+                  >
+                    <Text
+                      style={[
+                        styles.timeChipLabel,
+                        selected && styles.timeChipLabelSelected,
+                      ]}
+                    >
+                      {slot.label}
+                    </Text>
+                    <Text
+                      style={[
+                        styles.timeChipValue,
+                        selected && styles.timeChipValueSelected,
+                      ]}
+                    >
+                      {slot.value}
+                    </Text>
+                  </Pressable>
+                );
+              })}
+            </View>
+          ) : null}
         </View>
 
         <View style={styles.section}>
@@ -440,6 +473,30 @@ const styles = StyleSheet.create({
     fontSize: 13,
     lineHeight: 20,
     flex: 1,
+  },
+  toggleCard: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 16,
+    backgroundColor: colors.bgCard,
+    borderRadius: radii.lg,
+    borderWidth: 1,
+    borderColor: colors.border,
+    padding: 16,
+  },
+  toggleCopy: {
+    flex: 1,
+    gap: 4,
+  },
+  toggleTitle: {
+    color: colors.textPrimary,
+    fontSize: 15,
+    fontWeight: "600",
+  },
+  toggleSubtitle: {
+    color: colors.textSecondary,
+    fontSize: 13,
+    lineHeight: 20,
   },
   timeGrid: {
     flexDirection: "row",

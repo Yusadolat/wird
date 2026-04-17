@@ -58,6 +58,20 @@ export async function ensureNotificationPermissions() {
   );
 }
 
+// ---------------------------------------------------------------------------
+// Notification copy — Wird's voice. Tone: Invitation (gentlest).
+// This is the only uninvited message Wird sends. It must reinforce the
+// "no guilt, no streak shaming" philosophy.
+// ---------------------------------------------------------------------------
+const DAILY_REMINDER_COPY = {
+  title: "Your wird is waiting",
+  body: "Whenever you're ready. No rush.",
+};
+
+export async function cancelDailyWirdReminder() {
+  await Notifications.cancelAllScheduledNotificationsAsync();
+}
+
 export async function scheduleDailyWirdReminder(notificationTime: string) {
   const allowed = await ensureNotificationPermissions();
 
@@ -74,8 +88,8 @@ export async function scheduleDailyWirdReminder(notificationTime: string) {
 
   return Notifications.scheduleNotificationAsync({
     content: {
-      title: "Your Wird is ready",
-      body: "A few minutes with the Quran—let’s keep it gentle and consistent.",
+      title: DAILY_REMINDER_COPY.title,
+      body: DAILY_REMINDER_COPY.body,
       ...(Platform.OS === "ios" ? { sound: "default" } : {}),
     },
     trigger: {
