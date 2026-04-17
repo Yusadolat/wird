@@ -157,9 +157,20 @@ npm run ios         # or iOS
 
 ## Building for Release
 
+EAS manages `versionCode` remotely with `autoIncrement: true` — every production build gets a fresh Play Store-accepted version code automatically. Bump the user-visible `version` in `app.json` when the changelog warrants it.
+
 ```bash
-npm run build:preview:local        # Android APK (internal testing)
-npm run build:prod:local:aab       # Android AAB (Play Store)
+# Preview / internal testing APK
+npm run build:preview:local        # builds on your laptop
+npm run build:prod:local:aab       # production AAB, built locally
+
+# Production AAB via EAS cloud (no local Android toolchain needed)
+npm run build:prod:aab             # kicks off cloud build, watch progress in EAS dashboard
+npm run build:list                 # inspect recent builds and their status
+
+# Ship to Play Store (beta track, per eas.json submit config)
+npm run submit:prod                # submits the latest cloud build
+npm run release:prod               # build + auto-submit in one command
 ```
 
 Brand assets live in `assets/brand/` (SVG sources) and `assets/store/` (Play listing icon, feature graphic, phone screenshots).
