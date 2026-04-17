@@ -36,15 +36,65 @@ async function withUserId<T extends Record<string, unknown>>(payload: T) {
   };
 }
 
+type SyncFailureSeverity = "info" | "warning" | "error";
+
+// Classify sync failures by severity so Sentry noise matches actual signal.
+// 5xx + network issues self-heal on next session and should not alert.
+// Real bugs (JS errors, 4xx) still surface at error level.
+function classifySyncFailureSeverity(error: unknown): SyncFailureSeverity {
+  if (!error || typeof error !== "object") {
+    return "error";
+  }
+
+  const err = error as {
+    status?: unknown;
+    code?: unknown;
+    message?: unknown;
+    name?: unknown;
+  };
+
+  // Supabase JWT expired — expected during silent token refresh
+  if (err.code === "PGRST301") {
+    return "info";
+  }
+
+  // HTTP 5xx from Supabase/PostgREST — transient, retries on next sync
+  const statusNum =
+    typeof err.status === "number" ? err.status : Number(err.status);
+  if (!Number.isNaN(statusNum) && statusNum >= 500 && statusNum < 600) {
+    return "warning";
+  }
+
+  // Network failures: fetch throws TypeError, AbortController yields AbortError,
+  // and the error message typically mentions network/fetch/timeout.
+  const message =
+    typeof err.message === "string" ? err.message.toLowerCase() : "";
+  if (
+    err.name === "AbortError" ||
+    err.name === "TypeError" ||
+    message.includes("network") ||
+    message.includes("fetch") ||
+    message.includes("timeout") ||
+    message.includes("aborted")
+  ) {
+    return "warning";
+  }
+
+  return "error";
+}
+
 function logSyncFailure(action: string, error: unknown) {
+  const level = classifySyncFailureSeverity(error);
+
   if (config.sentryCaptureHandled) {
     captureException(error, {
-      tags: { area: "supabase_sync", action },
+      level,
+      tags: { area: "supabase_sync", action, severity: level },
     });
   }
 
   if (__DEV__) {
-    console.log(`[Supabase Sync] ${action} failed`, error);
+    console.log(`[Supabase Sync] ${action} failed [${level}]`, error);
   }
 }
 
@@ -134,7 +184,7 @@ export async function syncSettings(settings: SettingsSyncPayload) {
     const { error } = await client.from("user_preferences").upsert(payload);
 
     if (error) {
-      logSyncFailure("settings upsert", error.message);
+      logSyncFailure("settings upsert", error);
     }
   } catch (error) {
     logSyncFailure("settings", error);
@@ -204,7 +254,7 @@ async function syncBookmarkToSupabase(bookmark: BookmarkRecord) {
     const { error } = await client.from("bookmarks").upsert(payload);
 
     if (error) {
-      logSyncFailure("bookmark upsert", error.message);
+      logSyncFailure("bookmark upsert", error);
     }
   } catch (error) {
     logSyncFailure("bookmark", error);
@@ -232,7 +282,7 @@ export async function removeSyncedBookmark(id: string) {
       .eq("user_id", session.user.id);
 
     if (error) {
-      logSyncFailure("bookmark delete", error.message);
+      logSyncFailure("bookmark delete", error);
     }
   } catch (error) {
     logSyncFailure("bookmark delete", error);
@@ -284,7 +334,7 @@ async function syncReadingSessionToSupabase(session: ReadingSessionRecord) {
     const { error } = await client.from("reading_sessions").upsert(payload);
 
     if (error) {
-      logSyncFailure("reading session upsert", error.message);
+      logSyncFailure("reading session upsert", error);
     }
   } catch (error) {
     logSyncFailure("reading session", error);
@@ -319,7 +369,7 @@ export async function syncReflectionNote(note: ReflectionNoteRecord) {
     const { error } = await client.from("reflection_notes").upsert(payload);
 
     if (error) {
-      logSyncFailure("reflection note upsert", error.message);
+      logSyncFailure("reflection note upsert", error);
     }
   } catch (error) {
     logSyncFailure("reflection note", error);
@@ -360,17 +410,17 @@ export async function fetchRemoteAppData(): Promise<RemoteAppData | null> {
       ]);
 
     if (bookmarksResponse.error) {
-      logSyncFailure("bookmarks fetch", bookmarksResponse.error.message);
+      logSyncFailure("bookmarks fetch", bookmarksResponse.error);
       return null;
     }
 
     if (sessionsResponse.error) {
-      logSyncFailure("reading sessions fetch", sessionsResponse.error.message);
+      logSyncFailure("reading sessions fetch", sessionsResponse.error);
       return null;
     }
 
     if (reflectionsResponse.error) {
-      logSyncFailure("reflection notes fetch", reflectionsResponse.error.message);
+      logSyncFailure("reflection notes fetch", reflectionsResponse.error);
       return null;
     }
 
