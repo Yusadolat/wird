@@ -9,7 +9,7 @@
 [![Hackathon](https://img.shields.io/badge/Quran_Foundation-Hackathon_2026-0D1B2A)](https://launch.provisioncapital.com/quran-hackathon)
 
 **📱 Live demo:** [Wird on Google Play](https://play.google.com/store/apps/details?id=com.prontoville.wird)
-**🎬 Demo video:** [Watch on YouTube](https://youtube.com/shorts/4f9pyuMYoaM?feature=share) — script in [docs/demo-video-script.md](docs/demo-video-script.md)
+**🎬 Demo video:** [Watch on YouTube](https://youtube.com/shorts/4f9pyuMYoaM?feature=share) 
 **👤 Author:** Yusuf Adeyemo (Yusadolat) — solo submission
 
 </div>
