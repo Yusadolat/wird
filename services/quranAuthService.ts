@@ -59,6 +59,46 @@ function buildTokenExpiry(expiresIn?: number) {
   return Date.now() + expiresIn * 1000;
 }
 
+async function readFunctionError(error: unknown) {
+  const fallback =
+    error instanceof Error
+      ? error.message
+      : "Supabase auth exchange failed. Deploy the quran-auth-exchange function and set the Quran OAuth secrets in Supabase.";
+
+  const context = (error as { context?: Response | null })?.context;
+
+  if (!context) {
+    return fallback;
+  }
+
+  try {
+    const payload = (await context.clone().json()) as {
+      error?: unknown;
+      error_description?: unknown;
+      message?: unknown;
+    };
+
+    const detail =
+      payload.error_description ?? payload.error ?? payload.message ?? null;
+
+    if (typeof detail === "string" && detail.length > 0) {
+      return detail;
+    }
+  } catch {
+    try {
+      const text = await context.clone().text();
+
+      if (text.length > 0) {
+        return text;
+      }
+    } catch {
+      // keep fallback
+    }
+  }
+
+  return fallback;
+}
+
 export async function exchangeQuranCode(params: {
   code: string;
   codeVerifier: string;
@@ -86,10 +126,7 @@ export async function exchangeQuranCode(params: {
   );
 
   if (error) {
-    throw new Error(
-      error.message ||
-        "Supabase auth exchange failed. Deploy the quran-auth-exchange function and set the Quran OAuth secrets in Supabase.",
-    );
+    throw new Error(await readFunctionError(error));
   }
 
   const exchangePayload = (data ?? {}) as {

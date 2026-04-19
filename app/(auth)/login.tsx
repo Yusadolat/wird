@@ -1,13 +1,17 @@
 import * as AuthSession from "expo-auth-session";
 import * as WebBrowser from "expo-web-browser";
 import { Link, useRouter } from "expo-router";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { colors } from "../../constants/theme";
 import { config } from "../../lib/config";
 import { captureException } from "../../lib/sentry";
-import { clearPendingAuth, savePendingAuth } from "../../services/authStorage";
+import {
+  clearPendingAuth,
+  loadPendingAuth,
+  savePendingAuth,
+} from "../../services/authStorage";
 import {
   createQuranNonce,
   getQuranAuthDebugInfo,
@@ -31,7 +35,7 @@ export default function LoginScreen() {
   const setAuthenticating = useAuthStore((state) => state.setAuthenticating);
   const continueAsGuest = useAuthStore((state) => state.continueAsGuest);
   const resetOnboarding = useOnboardingStore((state) => state.resetOnboarding);
-  const [handledCode, setHandledCode] = useState<string | null>(null);
+  const handledCodeRef = useRef<string | null>(null);
   const [nonce, setNonce] = useState<string | null>(null);
   const [authUrl, setAuthUrl] = useState<string | null>(null);
   const debugInfo = getQuranAuthDebugInfo();
@@ -115,29 +119,29 @@ export default function LoginScreen() {
       }
       return;
     }
-
-    const code = response.params.code;
-    void handleAuthCode(code);
   }, [
-    finishSignIn,
-    handledCode,
-    request?.codeVerifier,
     response,
-    router,
     setAuthError,
     setAuthenticating,
   ]);
 
   async function handleAuthCode(code?: string) {
-    const codeVerifier = request?.codeVerifier;
-
-    if (!code || !codeVerifier || handledCode === code) {
+    if (!code || handledCodeRef.current === code) {
       return;
     }
 
-    setHandledCode(code);
+    handledCodeRef.current = code;
 
     try {
+      const pendingAuth = await loadPendingAuth();
+      const codeVerifier = pendingAuth?.codeVerifier ?? request?.codeVerifier;
+
+      if (!codeVerifier) {
+        throw new Error(
+          "Missing PKCE verifier for Quran.com sign-in. Please try again.",
+        );
+      }
+
       const session = await exchangeQuranCode({
         code,
         codeVerifier,
@@ -189,6 +193,7 @@ export default function LoginScreen() {
       await savePendingAuth({ codeVerifier: request.codeVerifier });
     }
 
+    handledCodeRef.current = null;
     resetOnboarding();
     setAuthError(null);
     setAuthenticating(true);

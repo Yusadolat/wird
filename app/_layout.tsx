@@ -8,6 +8,7 @@ import * as Notifications from "expo-notifications";
 import * as Sentry from "@sentry/react-native";
 import Constants from "expo-constants";
 
+import { UpdatePrompt } from "../components/UpdatePrompt";
 import { colors } from "../constants/theme";
 import { config } from "../lib/config";
 import { captureException, flush } from "../lib/sentry";
@@ -127,6 +128,7 @@ export default Sentry.wrap(function RootLayout() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider>
+        <UpdatePrompt />
         <StatusBar style="light" />
         <Stack
           initialRouteName="index"

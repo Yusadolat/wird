@@ -34,7 +34,10 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.prontoville.wird"
+      "bundleIdentifier": "com.prontoville.wird",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
       "adaptiveIcon": {
