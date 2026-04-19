@@ -10,7 +10,7 @@
 
 **📱 Live demo:** [Wird on Google Play](https://play.google.com/store/apps/details?id=com.prontoville.wird)
 **🎬 Demo video:** [Watch on YouTube](https://youtube.com/shorts/4f9pyuMYoaM?feature=share) — script in [docs/demo-video-script.md](docs/demo-video-script.md)
-**👤 Author:** Yusuf Adolat — solo submission
+**👤 Author:** Yusuf Adeyemo (Yusadolat) — solo submission
 
 </div>
 
