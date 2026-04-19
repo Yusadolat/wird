@@ -185,11 +185,6 @@ docs/             Hackathon brief, demo-video script, API usage, release notes
 - **Repository:** https://github.com/Yusadolat/wird
 - **Live demo (Play Store):** https://play.google.com/store/apps/details?id=com.prontoville.wird
 - **Demo video:** https://youtube.com/shorts/4f9pyuMYoaM?feature=share
-- **Hackathon page:** https://launch.provisioncapital.com/quran-hackathon
-
-## License
-
-Private to the author during the hackathon judging period. Licensing will be finalized after the submission deadline (2026-04-20).
 
 ---
 
