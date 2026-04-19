@@ -113,11 +113,20 @@ export default function LoginScreen() {
       return;
     }
 
-    if (response?.type !== "success") {
-      if (__DEV__ && response) {
-        console.log("[Quran OAuth] response", response);
-      }
+    const responseCode =
+      response &&
+      "params" in response &&
+      typeof response.params?.code === "string"
+        ? response.params.code
+        : undefined;
+
+    if (responseCode) {
+      void handleAuthCode(responseCode);
       return;
+    }
+
+    if (__DEV__ && response) {
+      console.log("[Quran OAuth] response", response);
     }
   }, [
     response,

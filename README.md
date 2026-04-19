@@ -9,7 +9,7 @@
 [![Hackathon](https://img.shields.io/badge/Quran_Foundation-Hackathon_2026-0D1B2A)](https://launch.provisioncapital.com/quran-hackathon)
 
 **📱 Live demo:** [Wird on Google Play](https://play.google.com/store/apps/details?id=com.prontoville.wird)
-**🎬 Demo video:** *(Paste unlisted YouTube link here once recorded — see [docs/demo-video-script.md](docs/demo-video-script.md))*
+**🎬 Demo video:** [Watch on YouTube](https://youtube.com/shorts/4f9pyuMYoaM?feature=share) — script in [docs/demo-video-script.md](docs/demo-video-script.md)
 **👤 Author:** Yusuf Adolat — solo submission
 
 </div>
@@ -196,7 +196,7 @@ docs/             Hackathon brief, demo-video script, API usage, release notes
 
 - **Repository:** https://github.com/Yusadolat/wird
 - **Live demo (Play Store):** https://play.google.com/store/apps/details?id=com.prontoville.wird
-- **Demo video:** *(link to be added before submission)*
+- **Demo video:** https://youtube.com/shorts/4f9pyuMYoaM?feature=share
 - **Hackathon page:** https://launch.provisioncapital.com/quran-hackathon
 
 ## License
