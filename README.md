@@ -126,18 +126,6 @@ Every completed wird emits both `reading-sessions` and `activity-days` records â
 
 ---
 
-## Rubric Alignment
-
-| Criterion | Points | How Wird Scores |
-|---|---|---|
-| **Impact on Quran Engagement** | 30 | Directly targets the post-Ramadan drop-off with adaptive, guilt-free re-entry. Reflection moves users from reading to understanding. |
-| **Product Quality & UX** | 20 | Calm dark-navy interface, unified design system, onboarding tuned to 3 taps. |
-| **Technical Execution** | 20 | OAuth PKCE working end-to-end, Expo doctor passing, Sentry monitoring live, Supabase edge functions deployed. |
-| **Innovation & Creativity** | 15 | Adaptive routine + mercy-based recalibration â€” a category of its own, not another streak tracker. |
-| **Effective API Use** | 15 | Four Content APIs + OAuth + two User APIs, each with purpose, not surface-level. |
-
----
-
 ## Running Locally
 
 ```bash
