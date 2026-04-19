@@ -161,8 +161,6 @@ npm run submit:prod                # submits the latest cloud build
 npm run release:prod               # build + auto-submit in one command
 ```
 
-Brand assets live in `assets/brand/` (SVG sources) and `assets/store/` (Play listing icon, feature graphic, phone screenshots).
-
 ---
 
 ## Project Structure
