@@ -1,8 +1,10 @@
 import { Feather } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   ActivityIndicator,
+  KeyboardAvoidingView,
+  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -34,6 +36,7 @@ function buildVerseKeys(chapterNumber: number, startVerse: number, endVerse: num
 
 export default function ReflectionScreen() {
   const router = useRouter();
+  const scrollViewRef = useRef<ScrollView | null>(null);
   const params = useLocalSearchParams<{
     chapterNumber?: string;
     chapterName?: string;
@@ -151,103 +154,120 @@ export default function ReflectionScreen() {
     router.replace("/(tabs)");
   }
 
+  function handleNoteFocus() {
+    requestAnimationFrame(() => {
+      scrollViewRef.current?.scrollToEnd({ animated: true });
+    });
+  }
+
   return (
     <SafeAreaView style={styles.safe}>
-      <ScrollView
-        contentContainerStyle={styles.content}
-        showsVerticalScrollIndicator={false}
+      <KeyboardAvoidingView
+        style={styles.flex}
+        behavior={Platform.OS === "ios" ? "padding" : undefined}
+        keyboardVerticalOffset={Platform.OS === "ios" ? 12 : 0}
       >
-        <View style={styles.checkCircle}>
-          <Feather name="check" size={36} color={colors.accentGreen} />
-        </View>
-
-        <Text style={styles.mashaAllah}>MashaAllah!</Text>
-        <Text style={styles.sessionComplete}>Session Complete</Text>
-
-        <View style={styles.statsCard}>
-          <View style={styles.statItem}>
-            <Text style={styles.statValue}>{verseCount}</Text>
-            <Text style={styles.statLabel}>Ayat Read</Text>
+        <ScrollView
+          ref={scrollViewRef}
+          contentContainerStyle={styles.content}
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+          keyboardDismissMode={Platform.OS === "ios" ? "interactive" : "on-drag"}
+        >
+          <View style={styles.checkCircle}>
+            <Feather name="check" size={36} color={colors.accentGreen} />
           </View>
-          <View style={styles.statDivider} />
-          <View style={styles.statItem}>
-            <Text style={styles.statValue}>8</Text>
-            <Text style={styles.statLabel}>Minutes</Text>
-          </View>
-          <View style={styles.statDivider} />
-          <View style={styles.statItem}>
-            <Text style={styles.statValue}>Live</Text>
-            <Text style={styles.statLabel}>Tafsir Source</Text>
-          </View>
-        </View>
 
-        <View style={styles.reflectCard}>
-          <View style={styles.reflectHeader}>
-            <Feather name="star" size={16} color={colors.accentPrimary} />
-            <Text style={styles.reflectLabel}>AI Reflection</Text>
-          </View>
-          <Text style={styles.reflectContext}>
-            Based on today's reading ({verseRange})
-          </Text>
+          <Text style={styles.mashaAllah}>MashaAllah!</Text>
+          <Text style={styles.sessionComplete}>Session Complete</Text>
 
-          {state.isLoading ? (
-            <View style={styles.loadingBlock}>
-              <ActivityIndicator color={colors.accentPrimary} />
-              <Text style={styles.loadingText}>
-                Building a tafsir-grounded reflection…
-              </Text>
+          <View style={styles.statsCard}>
+            <View style={styles.statItem}>
+              <Text style={styles.statValue}>{verseCount}</Text>
+              <Text style={styles.statLabel}>Ayat Read</Text>
             </View>
-          ) : (
-            <>
-              <Text style={styles.reflectQuestion}>
-                {"\u201C"}
-                {state.question}
-                {"\u201D"}
-              </Text>
+            <View style={styles.statDivider} />
+            <View style={styles.statItem}>
+              <Text style={styles.statValue}>8</Text>
+              <Text style={styles.statLabel}>Minutes</Text>
+            </View>
+            <View style={styles.statDivider} />
+            <View style={styles.statItem}>
+              <Text style={styles.statValue}>Live</Text>
+              <Text style={styles.statLabel}>Tafsir Source</Text>
+            </View>
+          </View>
 
-              <View style={styles.sourceBlock}>
-                <Text style={styles.sourceLabel}>
-                  Source excerpt · {state.resourceName}
-                </Text>
-                <Text style={styles.sourceText}>
-                  {state.tafsirExcerpt ||
-                    "Tafsir could not be loaded for this passage."}
+          <View style={styles.reflectCard}>
+            <View style={styles.reflectHeader}>
+              <Feather name="star" size={16} color={colors.accentPrimary} />
+              <Text style={styles.reflectLabel}>AI Reflection</Text>
+            </View>
+            <Text style={styles.reflectContext}>
+              Based on today's reading ({verseRange})
+            </Text>
+
+            {state.isLoading ? (
+              <View style={styles.loadingBlock}>
+                <ActivityIndicator color={colors.accentPrimary} />
+                <Text style={styles.loadingText}>
+                  Building a tafsir-grounded reflection…
                 </Text>
               </View>
+            ) : (
+              <>
+                <Text style={styles.reflectQuestion}>
+                  {"\u201C"}
+                  {state.question}
+                  {"\u201D"}
+                </Text>
 
-              {state.error ? (
-                <Text style={styles.errorText}>{state.error}</Text>
-              ) : null}
-            </>
-          )}
+                <View style={styles.sourceBlock}>
+                  <Text style={styles.sourceLabel}>
+                    Source excerpt · {state.resourceName}
+                  </Text>
+                  <Text style={styles.sourceText}>
+                    {state.tafsirExcerpt ||
+                      "Tafsir could not be loaded for this passage."}
+                  </Text>
+                </View>
 
-          <View style={styles.noteInput}>
-            <Feather name="edit-3" size={16} color={colors.textMuted} />
-            <TextInput
-              style={styles.noteText}
-              placeholder="Write a personal reflection..."
-              placeholderTextColor={colors.textMuted}
-              multiline
-              value={note}
-              onChangeText={setNote}
-            />
+                {state.error ? (
+                  <Text style={styles.errorText}>{state.error}</Text>
+                ) : null}
+              </>
+            )}
+
+            <View style={styles.noteInput}>
+              <Feather name="edit-3" size={16} color={colors.textMuted} />
+              <TextInput
+                style={styles.noteText}
+                placeholder="Write a personal reflection..."
+                placeholderTextColor={colors.textMuted}
+                multiline
+                value={note}
+                onChangeText={setNote}
+                onFocus={handleNoteFocus}
+              />
+            </View>
           </View>
-        </View>
 
-        <Pressable
-          style={styles.doneBtn}
-          onPress={handleDone}
-        >
-          <Text style={styles.doneBtnText}>Done</Text>
-          <Feather name="arrow-right" size={18} color={colors.textInverse} />
-        </Pressable>
-      </ScrollView>
+          <Pressable
+            style={styles.doneBtn}
+            onPress={handleDone}
+          >
+            <Text style={styles.doneBtnText}>Done</Text>
+            <Feather name="arrow-right" size={18} color={colors.textInverse} />
+          </Pressable>
+        </ScrollView>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: colors.bgPrimary },
+  flex: { flex: 1 },
   content: {
     paddingHorizontal: 24,
     paddingTop: 40,
