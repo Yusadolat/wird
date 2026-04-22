@@ -56,14 +56,20 @@ function getQuranTimezone() {
   return Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC";
 }
 
-function getSignedInAccessToken() {
+async function getFreshSignedInAccessToken() {
   const session = useAuthStore.getState();
 
   if (!session.accessToken || session.isGuest) {
     return null;
   }
 
-  return session.accessToken;
+  const refreshedSession = await session.refreshSession();
+
+  if (!refreshedSession?.accessToken && session.refreshToken) {
+    throw new Error("Your Quran.com session expired. Please sign in again.");
+  }
+
+  return refreshedSession?.accessToken ?? session.accessToken;
 }
 
 function parseVerseKey(verseKey: string) {
@@ -98,8 +104,9 @@ function mapQuranRemoteBookmark(
 async function quranUserRequest<T>(
   path: string,
   init: RequestInit & { includeTimezone?: boolean } = {},
+  allowRefreshRetry = true,
 ) {
-  const accessToken = getSignedInAccessToken();
+  const accessToken = await getFreshSignedInAccessToken();
 
   if (!accessToken) {
     return null;
@@ -132,6 +139,21 @@ async function quranUserRequest<T>(
       payload && typeof payload === "object" && "message" in payload
         ? payload.message
         : `Quran user API request failed (${response.status})`;
+
+    if (
+      allowRefreshRetry &&
+      response.status === 401 &&
+      typeof message === "string" &&
+      /expired|inactive/i.test(message)
+    ) {
+      const refreshedSession = await useAuthStore
+        .getState()
+        .refreshSession({ force: true });
+
+      if (refreshedSession?.accessToken) {
+        return quranUserRequest<T>(path, init, false);
+      }
+    }
 
     throw new Error(message ?? `Quran user API request failed (${response.status})`);
   }

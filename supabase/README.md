@@ -82,6 +82,8 @@ Deploy the function without JWT verification because the app invokes it before Q
 supabase functions deploy quran-auth-exchange --no-verify-jwt
 ```
 
+The function supports both the initial `authorization_code` exchange and later `refresh_token` grants. Redeploy it whenever auth exchange code changes; otherwise the mobile app can store a refresh token but still fail User API calls once the access token expires.
+
 Serve it locally during development:
 
 ```bash

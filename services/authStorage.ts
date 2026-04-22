@@ -7,6 +7,8 @@ const AUTH_PENDING_KEY = "wird.auth.pending";
 
 type PendingAuthPayload = {
   codeVerifier: string;
+  state: string;
+  nonce?: string | null;
 };
 
 export async function loadStoredAuthSession() {

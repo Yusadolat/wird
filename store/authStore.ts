@@ -19,6 +19,7 @@ type AuthStore = UserSession & {
   setSession: (session: Partial<UserSession>) => void;
   setAuthError: (message: string | null) => void;
   setAuthenticating: (value: boolean) => void;
+  refreshSession: (options?: { force?: boolean }) => Promise<UserSession | null>;
   hydrateSession: () => Promise<void>;
   finishSignIn: (session: UserSession) => Promise<void>;
   continueAsGuest: () => void;
@@ -36,7 +37,7 @@ const initialState: UserSession = {
   isGuest: false,
 };
 
-export const useAuthStore = create<AuthStore>((set) => ({
+export const useAuthStore = create<AuthStore>()((set, get) => ({
   ...initialState,
   authError: null,
   isAuthenticating: false,
@@ -44,6 +45,51 @@ export const useAuthStore = create<AuthStore>((set) => ({
   setSession: (session) => set((state) => ({ ...state, ...session })),
   setAuthError: (authError) => set({ authError }),
   setAuthenticating: (isAuthenticating) => set({ isAuthenticating }),
+  refreshSession: async (options) => {
+    const current = get();
+
+    if (current.isGuest || !current.refreshToken) {
+      return current.isGuest ? current : null;
+    }
+
+    if (!options?.force && !shouldRefreshQuranSession(current)) {
+      return current;
+    }
+
+    try {
+      const nextSession = await refreshQuranSession(current);
+
+      if (!nextSession) {
+        await clearStoredAuthSession();
+        set({
+          ...initialState,
+          authError: "Your Quran.com session expired. Please sign in again.",
+          isAuthenticating: false,
+          isHydrated: true,
+        });
+        return null;
+      }
+
+      await saveStoredAuthSession(nextSession);
+      set({
+        ...nextSession,
+        authError: null,
+        isAuthenticating: false,
+        isHydrated: true,
+      });
+
+      return nextSession;
+    } catch {
+      await clearStoredAuthSession();
+      set({
+        ...initialState,
+        authError: "Your Quran.com session expired. Please sign in again.",
+        isAuthenticating: false,
+        isHydrated: true,
+      });
+      return null;
+    }
+  },
   hydrateSession: async () => {
     if (config.skipQuranAuth) {
       set({

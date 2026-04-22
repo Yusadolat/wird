@@ -1,7 +1,7 @@
 import * as AuthSession from "expo-auth-session";
 import * as WebBrowser from "expo-web-browser";
-import { Link, useRouter } from "expo-router";
-import { useEffect, useRef, useState } from "react";
+import { useRouter } from "expo-router";
+import { useState } from "react";
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { colors } from "../../constants/theme";
@@ -15,7 +15,6 @@ import {
 import {
   createQuranNonce,
   getQuranAuthDebugInfo,
-  exchangeQuranCode,
   getQuranClientId,
   getQuranRedirectUri,
   getQuranScopes,
@@ -29,160 +28,54 @@ WebBrowser.maybeCompleteAuthSession();
 export default function LoginScreen() {
   const router = useRouter();
   const authError = useAuthStore((state) => state.authError);
-  const finishSignIn = useAuthStore((state) => state.finishSignIn);
   const isAuthenticating = useAuthStore((state) => state.isAuthenticating);
   const setAuthError = useAuthStore((state) => state.setAuthError);
   const setAuthenticating = useAuthStore((state) => state.setAuthenticating);
   const continueAsGuest = useAuthStore((state) => state.continueAsGuest);
   const resetOnboarding = useOnboardingStore((state) => state.resetOnboarding);
-  const handledCodeRef = useRef<string | null>(null);
   const [nonce, setNonce] = useState<string | null>(null);
   const [authUrl, setAuthUrl] = useState<string | null>(null);
+  const [verifierReady, setVerifierReady] = useState(false);
   const debugInfo = getQuranAuthDebugInfo();
 
-  useEffect(() => {
-    void (async () => {
-      if (!nonce) {
-        setNonce(await createQuranNonce());
-      }
-    })();
-  }, [nonce]);
-
-  const [request, response, promptAsync] = AuthSession.useAuthRequest(
-    {
+  async function buildAuthRequest() {
+    const requestNonce = await createQuranNonce();
+    const authRequest = new AuthSession.AuthRequest({
       clientId: getQuranClientId(),
       scopes: getQuranScopes(),
       redirectUri: getQuranRedirectUri(),
       responseType: AuthSession.ResponseType.Code,
       usePKCE: true,
-      extraParams: nonce ? { nonce } : undefined,
-    },
-    quranDiscovery,
-  );
+      extraParams: { nonce: requestNonce },
+    });
+    const builtAuthUrl = await authRequest.makeAuthUrlAsync(quranDiscovery);
 
-  useEffect(() => {
+    if (!authRequest.codeVerifier) {
+      throw new Error("Quran.com sign-in could not prepare PKCE.");
+    }
+
+    await savePendingAuth({
+      codeVerifier: authRequest.codeVerifier,
+      state: authRequest.state,
+      nonce: requestNonce,
+    });
+
+    setNonce(requestNonce);
+    setAuthUrl(builtAuthUrl);
+    setVerifierReady(true);
+
     if (__DEV__) {
+      console.log("[Quran OAuth] built auth url", builtAuthUrl);
       console.log("[Quran OAuth] request", {
         ...debugInfo,
-        nonce,
-        codeVerifierReady: Boolean(request?.codeVerifier),
-        authUrl,
+        nonce: requestNonce,
+        state: authRequest.state,
+        codeVerifierReady: true,
+        authUrl: builtAuthUrl,
       });
     }
-  }, [authUrl, debugInfo, nonce, request?.codeVerifier]);
 
-  useEffect(() => {
-    void (async () => {
-      if (!request) {
-        return;
-      }
-
-      try {
-        const builtAuthUrl = request.url ?? (await request.makeAuthUrlAsync(quranDiscovery));
-        setAuthUrl(builtAuthUrl);
-
-        if (__DEV__) {
-          console.log("[Quran OAuth] built auth url", builtAuthUrl);
-        }
-      } catch (error) {
-      if (config.sentryCaptureHandled) {
-        captureException(error, {
-          tags: { area: "auth", action: "oauth_build_auth_url" },
-        });
-      }
-
-        if (__DEV__) {
-          console.log("[Quran OAuth] failed to build auth url", error);
-        }
-      }
-    })();
-  }, [request]);
-
-  useEffect(() => {
-    if (response?.type === "error") {
-      if (__DEV__) {
-        console.log("[Quran OAuth] response error", response);
-      }
-      setAuthenticating(false);
-      setAuthError(
-        (typeof response.error === "string" && response.error) ||
-          response.params.error_description ||
-          response.errorCode ||
-          "Quran.com sign-in failed.",
-      );
-      return;
-    }
-
-    const responseCode =
-      response &&
-      "params" in response &&
-      typeof response.params?.code === "string"
-        ? response.params.code
-        : undefined;
-
-    if (responseCode) {
-      void handleAuthCode(responseCode);
-      return;
-    }
-
-    if (__DEV__ && response) {
-      console.log("[Quran OAuth] response", response);
-    }
-  }, [
-    response,
-    setAuthError,
-    setAuthenticating,
-  ]);
-
-  async function handleAuthCode(code?: string) {
-    if (!code || handledCodeRef.current === code) {
-      return;
-    }
-
-    handledCodeRef.current = code;
-
-    try {
-      const pendingAuth = await loadPendingAuth();
-      const codeVerifier = pendingAuth?.codeVerifier ?? request?.codeVerifier;
-
-      if (!codeVerifier) {
-        throw new Error(
-          "Missing PKCE verifier for Quran.com sign-in. Please try again.",
-        );
-      }
-
-      const session = await exchangeQuranCode({
-        code,
-        codeVerifier,
-      });
-      await clearPendingAuth();
-      if (__DEV__) {
-        console.log("[Quran OAuth] exchange success", {
-          userId: session.userId,
-          email: session.email,
-        });
-      }
-      await finishSignIn(session);
-      router.replace("/(onboarding)/goal");
-    } catch (error) {
-      await clearPendingAuth();
-
-      if (config.sentryCaptureHandled) {
-        captureException(error, {
-          tags: { area: "auth", action: "oauth_exchange_code" },
-        });
-      }
-
-      if (__DEV__) {
-        console.log("[Quran OAuth] exchange failure", error);
-      }
-      setAuthenticating(false);
-      setAuthError(
-        error instanceof Error
-          ? error.message
-          : "Unable to complete Quran.com sign-in.",
-      );
-    }
+    return { authRequest, builtAuthUrl };
   }
 
   async function handleSignIn() {
@@ -192,35 +85,80 @@ export default function LoginScreen() {
       return;
     }
 
-    if (!request) {
-      setAuthenticating(false);
-      setAuthError("Quran.com sign-in is still preparing. Try again.");
-      return;
-    }
-
-    if (request.codeVerifier) {
-      await savePendingAuth({ codeVerifier: request.codeVerifier });
-    }
-
-    handledCodeRef.current = null;
     resetOnboarding();
     setAuthError(null);
     setAuthenticating(true);
 
-    const result = await promptAsync();
+    try {
+      const { authRequest, builtAuthUrl } = await buildAuthRequest();
+      const result = await authRequest.promptAsync(quranDiscovery, {
+        url: builtAuthUrl,
+      });
 
-    if (__DEV__) {
-      console.log("[Quran OAuth] prompt result", result);
-    }
+      if (__DEV__) {
+        console.log("[Quran OAuth] prompt result", result);
+      }
 
-    if (result.type === "success") {
-      await handleAuthCode(result.params.code);
-      return;
-    }
+      if (result.type === "success") {
+        const pendingAuth = await loadPendingAuth();
 
-    if (result.type === "dismiss" || result.type === "cancel") {
-      await clearPendingAuth();
+        if (!pendingAuth) {
+          return;
+        }
+
+        if (result.params.state !== pendingAuth.state) {
+          await clearPendingAuth();
+          setAuthenticating(false);
+          setAuthError("Quran.com sign-in returned an unexpected state.");
+          return;
+        }
+
+        router.replace({
+          pathname: "/auth/callback",
+          params: {
+            code: result.params.code,
+            state: result.params.state,
+          },
+        });
+        return;
+      }
+
+      if (result.type === "error") {
+        await clearPendingAuth();
+        setAuthenticating(false);
+        setAuthError(
+          result.params.error_description ||
+            result.errorCode ||
+            "Quran.com sign-in failed.",
+        );
+        return;
+      }
+
+      if (result.type === "dismiss" || result.type === "cancel") {
+        await clearPendingAuth();
+        setAuthenticating(false);
+        return;
+      }
+
       setAuthenticating(false);
+    } catch (error) {
+      await clearPendingAuth();
+
+      if (config.sentryCaptureHandled) {
+        captureException(error, {
+          tags: { area: "auth", action: "oauth_prepare_request" },
+        });
+      }
+
+      if (__DEV__) {
+        console.log("[Quran OAuth] sign-in failure", error);
+      }
+      setAuthenticating(false);
+      setAuthError(
+        error instanceof Error
+          ? error.message
+          : "Unable to start Quran.com sign-in.",
+      );
     }
   }
 
@@ -252,13 +190,9 @@ export default function LoginScreen() {
           <Pressable
             style={[
               styles.signInButton,
-              (!request || isAuthenticating) &&
-                !config.skipQuranAuth &&
-                styles.signInButtonDisabled,
+              isAuthenticating && !config.skipQuranAuth && styles.signInButtonDisabled,
             ]}
-            disabled={
-              (!request && !config.skipQuranAuth) || isAuthenticating
-            }
+            disabled={isAuthenticating}
             onPress={() => void handleSignIn()}
           >
             {isAuthenticating ? (
@@ -304,7 +238,7 @@ export default function LoginScreen() {
               nonce: {nonce ?? "pending"}
             </Text>
             <Text style={styles.debugLine}>
-              verifier: {request?.codeVerifier ? "ready" : "pending"}
+              verifier: {verifierReady ? "ready" : "pending"}
             </Text>
             <Text style={styles.debugLine}>
               actual redirect: {authUrl ? getQueryParam(authUrl, "redirect_uri") : "pending"}

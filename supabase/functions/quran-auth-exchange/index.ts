@@ -37,6 +37,8 @@ Deno.serve(async (request) => {
     const {
       code = "",
       codeVerifier = "",
+      grantType = "authorization_code",
+      refreshToken = "",
       redirectUri = "",
       useProduction = false,
     } = await request.json();
@@ -50,19 +52,28 @@ Deno.serve(async (request) => {
       );
     }
 
+    const tokenBody =
+      grantType === "refresh_token"
+        ? new URLSearchParams({
+            grant_type: "refresh_token",
+            refresh_token: String(refreshToken),
+            client_id: oauth.clientId,
+          })
+        : new URLSearchParams({
+            grant_type: "authorization_code",
+            code: String(code),
+            code_verifier: String(codeVerifier),
+            redirect_uri: String(redirectUri),
+            client_id: oauth.clientId,
+          });
+
     const tokenResponse = await fetch(`${oauth.baseUrl}/oauth2/token`, {
       method: "POST",
       headers: {
         "Content-Type": "application/x-www-form-urlencoded",
         Authorization: buildBasicAuthHeader(oauth.clientId, oauth.clientSecret),
       },
-      body: new URLSearchParams({
-        grant_type: "authorization_code",
-        code: String(code),
-        code_verifier: String(codeVerifier),
-        redirect_uri: String(redirectUri),
-        client_id: oauth.clientId,
-      }),
+      body: tokenBody,
     });
 
     const tokenPayload = await tokenResponse.json();
@@ -81,23 +92,27 @@ Deno.serve(async (request) => {
       );
     }
 
-    const userInfoResponse = await fetch(`${oauth.baseUrl}/userinfo`, {
-      headers: {
-        Authorization: `Bearer ${tokenPayload.access_token}`,
-      },
-    });
+    let user = null;
 
-    const user = await userInfoResponse.json();
-
-    if (!userInfoResponse.ok) {
-      console.error("[quran-auth-exchange] userinfo failed", user);
-
-      return Response.json(
-        {
-          error: "Token exchange succeeded, but user info could not be loaded.",
+    if (grantType !== "refresh_token") {
+      const userInfoResponse = await fetch(`${oauth.baseUrl}/userinfo`, {
+        headers: {
+          Authorization: `Bearer ${tokenPayload.access_token}`,
         },
-        { headers: corsHeaders, status: 400 },
-      );
+      });
+
+      user = await userInfoResponse.json();
+
+      if (!userInfoResponse.ok) {
+        console.error("[quran-auth-exchange] userinfo failed", user);
+
+        return Response.json(
+          {
+            error: "Token exchange succeeded, but user info could not be loaded.",
+          },
+          { headers: corsHeaders, status: 400 },
+        );
+      }
     }
 
     return Response.json(

@@ -71,6 +71,7 @@ Default reciter: `EXPO_PUBLIC_DEFAULT_RECITER_ID=7` (Mishari Al-Afasy).
 4. App POSTs the code + verifier to the **Supabase edge function** (`quran-auth-exchange`), which performs the server-side token exchange. This keeps the client secret off-device.
 5. Edge function returns the access token + refresh token.
 6. Tokens are stored in `expo-secure-store` via [services/authStorage.ts](../services/authStorage.ts).
+7. Before User API requests, Wird refreshes expired access tokens through the same edge function using the stored refresh token. If a token is rejected as expired or inactive mid-session, the User API client forces one refresh and retries the request once.
 
 ### Why an edge function
 

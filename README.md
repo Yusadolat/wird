@@ -80,6 +80,7 @@ Defaults: translation `131` (Mustafa Khattab), tafsir `169` (Ibn Kathir), recite
 2. Redirect returns an authorization code to `wird://auth/callback`.
 3. App POSTs code + verifier to the **Supabase edge function** [quran-auth-exchange](supabase/functions/quran-auth-exchange/index.ts), which performs the server-side token exchange — keeping the client secret off-device.
 4. Tokens stored in `expo-secure-store` via [services/authStorage.ts](services/authStorage.ts).
+5. When the access token expires, the same edge function performs a `refresh_token` grant and the User API client retries the failed request once.
 
 Tests in [lib/quranAuth.test.ts](lib/quranAuth.test.ts).
 

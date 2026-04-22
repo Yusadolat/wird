@@ -15,10 +15,14 @@ import { useOnboardingStore } from "../../store/onboardingStore";
 
 export default function QuranAuthCallbackScreen() {
   const router = useRouter();
-  const params = useLocalSearchParams<{ code?: string | string[] }>();
+  const params = useLocalSearchParams<{
+    code?: string | string[];
+    state?: string | string[];
+  }>();
   const finishSignIn = useAuthStore((state) => state.finishSignIn);
   const setAuthError = useAuthStore((state) => state.setAuthError);
   const setAuthenticating = useAuthStore((state) => state.setAuthenticating);
+  const userId = useAuthStore((state) => state.userId);
   const hasCompletedOnboarding = useOnboardingStore(
     (state) => state.hasCompletedOnboarding,
   );
@@ -30,6 +34,9 @@ export default function QuranAuthCallbackScreen() {
 
       try {
         const code = Array.isArray(params.code) ? params.code[0] : params.code;
+        const returnedState = Array.isArray(params.state)
+          ? params.state[0]
+          : params.state;
 
         if (!code) {
           throw new Error("Quran.com did not return an authorization code.");
@@ -38,9 +45,18 @@ export default function QuranAuthCallbackScreen() {
         const pendingAuth = await loadPendingAuth();
 
         if (!pendingAuth?.codeVerifier) {
+          if (userId) {
+            router.replace(hasCompletedOnboarding ? "/(tabs)" : "/(onboarding)/goal");
+            return;
+          }
+
           throw new Error(
             "Missing PKCE verifier for Quran.com sign-in. Please try again.",
           );
+        }
+
+        if (returnedState !== pendingAuth.state) {
+          throw new Error("Quran.com sign-in returned an unexpected state.");
         }
 
         const session = await exchangeQuranCode({
@@ -73,9 +89,11 @@ export default function QuranAuthCallbackScreen() {
     finishSignIn,
     hasCompletedOnboarding,
     params.code,
+    params.state,
     router,
     setAuthError,
     setAuthenticating,
+    userId,
   ]);
 
   return (

@@ -117,6 +117,7 @@ export async function exchangeQuranCode(params: {
     "quran-auth-exchange",
     {
       body: {
+        grantType: "authorization_code",
         code: params.code,
         codeVerifier: params.codeVerifier,
         redirectUri: getQuranRedirectUri(),
@@ -165,7 +166,67 @@ export async function exchangeQuranCode(params: {
 }
 
 export async function refreshQuranSession(session: UserSession) {
-  return session;
+  if (!session.refreshToken) {
+    return null;
+  }
+
+  if (!supabase) {
+    throw new Error(
+      "Supabase public config is missing in this build. Quran auth refresh cannot run.",
+    );
+  }
+
+  const { data, error } = await supabase.functions.invoke(
+    "quran-auth-exchange",
+    {
+      body: {
+        grantType: "refresh_token",
+        refreshToken: session.refreshToken,
+        useProduction: config.useProduction,
+      },
+    },
+  );
+
+  if (error) {
+    throw new Error(await readFunctionError(error));
+  }
+
+  const refreshPayload = (data ?? {}) as {
+    accessToken?: string | null;
+    refreshToken?: string | null;
+    idToken?: string | null;
+    expiresIn?: number | null;
+    user?: Record<string, string | null | undefined> | null;
+    error?: string;
+  };
+
+  if (refreshPayload.error) {
+    throw new Error(refreshPayload.error);
+  }
+
+  if (!refreshPayload.accessToken) {
+    throw new Error("Quran.com did not return a refreshed access token.");
+  }
+
+  const userInfo = refreshPayload.user ?? {};
+  const displayName =
+    [userInfo.first_name, userInfo.last_name].filter(Boolean).join(" ").trim() ||
+    userInfo.name ||
+    userInfo.preferred_username ||
+    session.displayName;
+
+  return {
+    ...session,
+    accessToken: refreshPayload.accessToken,
+    refreshToken: refreshPayload.refreshToken ?? session.refreshToken,
+    idToken: refreshPayload.idToken ?? session.idToken,
+    tokenExpiresAt:
+      buildTokenExpiry(refreshPayload.expiresIn ?? undefined) ?? session.tokenExpiresAt,
+    userId: userInfo.sub ?? session.userId,
+    displayName,
+    email: userInfo.email ?? session.email,
+    isGuest: false,
+  } satisfies UserSession;
 }
 
 export function shouldRefreshQuranSession(session: UserSession) {
