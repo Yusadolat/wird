@@ -1,6 +1,6 @@
 # Quran Foundation API Usage in Wird
 
-Wird integrates **four Content APIs**, **OAuth 2.0 with PKCE**, and **three User API endpoint groups** from the Quran Foundation platform. Every API call has a concrete user-facing purpose, not a token integration.
+Wird integrates **four Content API groups**, **OAuth 2.0 with PKCE**, and **three User API endpoint groups** from the Quran Foundation platform. Every API call has a concrete user-facing purpose, not a token integration.
 
 **Client IDs, base URLs, and environment variables:** see [../.env.example](../.env.example)
 **Runtime config:** [../lib/config.ts](../lib/config.ts)
@@ -88,19 +88,22 @@ Direct client-side token exchange requires the client secret on the device, whic
 | Endpoint | Wird feature | Source function |
 |---|---|---|
 | `POST /bookmarks` | Save verse from reader's long-press menu | `createQuranBookmark` |
-| `GET /bookmarks?type=ayah&key={chapter}` | List bookmarks in the Saved tab | `removeQuranBookmarkByVerseKey` (read-before-delete) |
+| `GET /bookmarks?type=ayah&mushafId=4&first=20` | Import Quran.com saved ayat into Connected Library | `fetchQuranBookmarks` |
+| `GET /bookmarks?type=ayah&key={chapter}` | Locate the matching remote bookmark before deletion | `removeQuranBookmarkByVerseKey` |
 | `DELETE /bookmarks/{id}` | Unbookmark from Saved tab | `removeQuranBookmarkByVerseKey` |
 
-Bookmarks are stored with `type=ayah`, `key={chapterNumber}`, `verseNumber`, and `mushaf=4`.
+Bookmarks are stored with `type=ayah`, `key={chapterNumber}`, `verseNumber`, and `mushaf=4`. Imported Quran.com bookmarks are merged locally by `verseKey` without immediately re-posting them, preventing duplicate remote writes.
 
 ### 3.2 Activity & Goals API
 
 | Endpoint | Wird feature | Source function |
 |---|---|---|
 | `POST /reading-sessions` | Record that user finished today's wird | `syncQuranReadingSession` |
+| `GET /reading-sessions` | Display recent Quran.com reading-session sync status in Connected Library | `fetchQuranReadingSessions` |
 | `POST /activity-days` | Log total reading time + verse ranges covered, with IANA timezone for correct day-bucketing | `syncQuranActivityDay` |
+| `GET /activity-days` | Display Quran.com activity-day sync status for the last 30 days | `fetchQuranActivityDays` |
 
-Every completed wird session emits both records — so the user's progress is visible across any Quran Foundation-connected surface, not just Wird. This is what turns Wird from a silo into a companion in the Quran Foundation ecosystem.
+Every completed wird session emits both records — so the user's progress is visible across any Quran Foundation-connected surface, not just Wird. Connected Library also reads these remote records back as a user-facing sync signal.
 
 ---
 
@@ -127,12 +130,15 @@ This means the **mercy philosophy** extends to the network: a failed sync doesn'
 | Open Progress | Activity Days (read via sync), local aggregation |
 | Sign in with Quran.com | OAuth 2.0 PKCE + Supabase edge exchange |
 | Open Saved tab | Bookmarks (GET) |
+| Open Connected Library | Bookmarks (GET), Reading Sessions (GET), Activity Days (GET), Chapters |
+| Tap imported bookmark → Read | Verses, Audio, Tafsir |
+| Tap imported bookmark → Reflect | Tafsir + AI reflection |
 
 ---
 
 ## 6. Count Summary
 
 - **Content APIs integrated:** 4 (Verses, Chapters, Tafsir, Audio) — requirement was ≥1
-- **User APIs integrated:** 2 groups, 5 endpoints (Bookmarks ×3, Activity & Goals ×2) — requirement was ≥1
+- **User APIs integrated:** 3 groups, 7 endpoints (Bookmarks ×3, Reading Sessions ×2, Activity Days ×2) — requirement was ≥1
 - **OAuth:** Implemented with PKCE + confidential-client edge proxy
-- **Total distinct endpoints called:** 11
+- **Total distinct content/user endpoints called:** 14

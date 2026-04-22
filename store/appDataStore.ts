@@ -31,6 +31,10 @@ type AppDataStore = {
   reflectionNotes: ReflectionNoteRecord[];
   hasLoadedRemote: boolean;
   addBookmark: (input: AddBookmarkInput) => void;
+  mergeImportedBookmarks: (bookmarks: BookmarkRecord[]) => {
+    addedCount: number;
+    totalCount: number;
+  };
   removeBookmark: (verseKey: string) => void;
   toggleBookmark: (input: AddBookmarkInput) => boolean;
   addReadingSession: (input: AddReadingSessionInput) => void;
@@ -87,6 +91,30 @@ export const useAppDataStore = create<AppDataStore>()(
         }));
 
         void syncBookmark(bookmark);
+      },
+      mergeImportedBookmarks: (bookmarks) => {
+        const existingVerseKeys = new Set(
+          get().bookmarks.map((bookmark) => bookmark.verseKey),
+        );
+        const imported = bookmarks.filter(
+          (bookmark) => !existingVerseKeys.has(bookmark.verseKey),
+        );
+
+        if (imported.length === 0) {
+          return {
+            addedCount: 0,
+            totalCount: get().bookmarks.length,
+          };
+        }
+
+        set((state) => ({
+          bookmarks: sortNewestFirst([...imported, ...state.bookmarks]),
+        }));
+
+        return {
+          addedCount: imported.length,
+          totalCount: get().bookmarks.length,
+        };
       },
       removeBookmark: (verseKey) => {
         const bookmark = get().bookmarks.find((item) => item.verseKey === verseKey);

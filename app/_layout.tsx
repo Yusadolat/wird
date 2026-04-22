@@ -148,6 +148,7 @@ export default Sentry.wrap(function RootLayout() {
           <Stack.Screen name="reader" />
           <Stack.Screen name="reflection" />
           <Stack.Screen name="history" />
+          <Stack.Screen name="connected-library" />
         </Stack>
       </SafeAreaProvider>
     </GestureHandlerRootView>

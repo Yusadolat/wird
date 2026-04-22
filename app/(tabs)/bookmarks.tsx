@@ -1,4 +1,5 @@
 import { Feather } from "@expo/vector-icons";
+import { Link } from "expo-router";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -19,6 +20,21 @@ export default function BookmarksScreen() {
           <Text style={styles.title}>Saved Ayat</Text>
           <Text style={styles.count}>{bookmarks.length} bookmarks</Text>
         </View>
+
+        <Link href="/connected-library" asChild>
+          <Pressable style={styles.connectedCard}>
+            <View style={styles.connectedIcon}>
+              <Feather name="cloud" size={18} color={colors.accentPrimary} />
+            </View>
+            <View style={styles.connectedCopy}>
+              <Text style={styles.connectedTitle}>Connected Library</Text>
+              <Text style={styles.connectedText}>
+                Import Quran.com bookmarks and check User API sync status.
+              </Text>
+            </View>
+            <Feather name="arrow-right" size={18} color={colors.accentPrimary} />
+          </Pressable>
+        </Link>
 
         {bookmarks.length === 0 ? (
           <View style={styles.emptyCard}>
@@ -71,6 +87,35 @@ const styles = StyleSheet.create({
   header: { gap: 4 },
   title: { color: colors.textPrimary, fontSize: 24, fontWeight: "700" },
   count: { color: colors.textMuted, fontSize: 13, fontWeight: "500" },
+  connectedCard: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 14,
+    backgroundColor: colors.bgCard,
+    borderRadius: radii.lg,
+    borderWidth: 1,
+    borderColor: colors.border,
+    padding: 16,
+  },
+  connectedIcon: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    backgroundColor: "rgba(200, 169, 110, 0.12)",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  connectedCopy: { flex: 1, gap: 4 },
+  connectedTitle: {
+    color: colors.textPrimary,
+    fontSize: 15,
+    fontWeight: "700",
+  },
+  connectedText: {
+    color: colors.textSecondary,
+    fontSize: 13,
+    lineHeight: 20,
+  },
   list: {
     backgroundColor: colors.bgCard,
     borderRadius: radii.lg,

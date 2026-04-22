@@ -15,8 +15,35 @@ type QuranBookmarksResponse = {
     key: number;
     verseNumber?: number;
     type: string;
+    createdAt?: string;
+    isInDefaultCollection?: boolean;
   }>;
+  pagination?: {
+    endCursor?: string;
+    hasNextPage?: boolean;
+  };
   message?: string;
+};
+
+type QuranReadingSessionsResponse = {
+  success: boolean;
+  data?: unknown[];
+  message?: string;
+};
+
+type QuranActivityDaysResponse = {
+  success: boolean;
+  data?: unknown[];
+  message?: string;
+};
+
+export type QuranRemoteBookmark = {
+  id: string;
+  chapterNumber: number;
+  verseNumber: number;
+  verseKey: string;
+  createdAt: string | null;
+  isInDefaultCollection: boolean;
 };
 
 function getQuranUserApiBaseUrl() {
@@ -49,6 +76,23 @@ function parseVerseKey(verseKey: string) {
   }
 
   return { chapterNumber, verseNumber };
+}
+
+function mapQuranRemoteBookmark(
+  item: NonNullable<QuranBookmarksResponse["data"]>[number],
+) {
+  if (item.type !== "ayah" || !item.key || !item.verseNumber) {
+    return null;
+  }
+
+  return {
+    id: item.id,
+    chapterNumber: item.key,
+    verseNumber: item.verseNumber,
+    verseKey: `${item.key}:${item.verseNumber}`,
+    createdAt: item.createdAt ?? null,
+    isInDefaultCollection: item.isInDefaultCollection ?? false,
+  } satisfies QuranRemoteBookmark;
 }
 
 async function quranUserRequest<T>(
@@ -122,6 +166,91 @@ export async function createQuranBookmark(bookmark: BookmarkRecord) {
     });
   } catch (error) {
     logQuranUserSyncFailure("bookmark create", error);
+  }
+}
+
+export async function fetchQuranBookmarks(limit = 20) {
+  try {
+    const bookmarks: QuranRemoteBookmark[] = [];
+    let after: string | undefined;
+    let hasNextPage = true;
+
+    while (bookmarks.length < limit && hasNextPage) {
+      const query = new URLSearchParams({
+        type: "ayah",
+        mushafId: String(DEFAULT_MUSHAF_ID),
+        first: String(Math.min(20, limit - bookmarks.length)),
+      });
+
+      if (after) {
+        query.set("after", after);
+      }
+
+      const response = await quranUserRequest<QuranBookmarksResponse>(
+        `/bookmarks?${query.toString()}`,
+      );
+
+      if (!response?.data?.length) {
+        break;
+      }
+
+      for (const item of response.data) {
+        const bookmark = mapQuranRemoteBookmark(item);
+
+        if (bookmark) {
+          bookmarks.push(bookmark);
+        }
+      }
+
+      after = response.pagination?.endCursor;
+      hasNextPage = Boolean(response.pagination?.hasNextPage && after);
+    }
+
+    return bookmarks;
+  } catch (error) {
+    logQuranUserSyncFailure("bookmark fetch", error);
+    throw error;
+  }
+}
+
+export async function fetchQuranReadingSessions(limit = 10) {
+  try {
+    const query = new URLSearchParams({
+      first: String(Math.min(Math.max(limit, 1), 20)),
+    });
+    const response = await quranUserRequest<QuranReadingSessionsResponse>(
+      `/reading-sessions?${query.toString()}`,
+    );
+
+    return response?.data ?? [];
+  } catch (error) {
+    logQuranUserSyncFailure("reading sessions fetch", error);
+    throw error;
+  }
+}
+
+export async function fetchQuranActivityDays(params: {
+  from: string;
+  to: string;
+  limit?: number;
+}) {
+  try {
+    const query = new URLSearchParams({
+      from: params.from,
+      to: params.to,
+      type: "QURAN",
+      dateOrderBy: "desc",
+      first: String(Math.min(Math.max(params.limit ?? 20, 1), 20)),
+    });
+    const response = await quranUserRequest<QuranActivityDaysResponse>(
+      `/activity-days?${query.toString()}`,
+      { includeTimezone: true },
+    );
+
+    return response?.data ?? [];
+  } catch (error) {
+    logQuranUserSyncFailure("activity days fetch", error);
+    throw error;
   }
 }
 
