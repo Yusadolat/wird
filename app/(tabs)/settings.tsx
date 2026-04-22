@@ -3,6 +3,7 @@ import { ScrollView, StyleSheet, Switch, Text, Pressable, View } from "react-nat
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 
+import { ReminderTimePicker } from "../../components/ReminderTimePicker";
 import { colors, radii } from "../../constants/theme";
 import { config } from "../../lib/config";
 import { useAuthStore } from "../../store/authStore";
@@ -36,13 +37,6 @@ const READING_LEVEL_OPTIONS: {
     label: "Advanced",
     subtitle: "Arabic-focused reading",
   },
-];
-
-const REMINDER_TIMES = [
-  { value: "05:45", label: "After Fajr" },
-  { value: "15:45", label: "After Asr" },
-  { value: "18:30", label: "After Maghrib" },
-  { value: "20:15", label: "After Isha" },
 ];
 
 type SelectorOptionProps = {
@@ -233,38 +227,10 @@ export default function SettingsScreen() {
           </View>
 
           {notificationsEnabled ? (
-            <View style={styles.timeGrid}>
-              {REMINDER_TIMES.map((slot) => {
-                const selected = notificationTime === slot.value;
-                return (
-                  <Pressable
-                    key={slot.value}
-                    onPress={() => setNotificationTime(slot.value)}
-                    style={[
-                      styles.timeChip,
-                      selected && styles.timeChipSelected,
-                    ]}
-                  >
-                    <Text
-                      style={[
-                        styles.timeChipLabel,
-                        selected && styles.timeChipLabelSelected,
-                      ]}
-                    >
-                      {slot.label}
-                    </Text>
-                    <Text
-                      style={[
-                        styles.timeChipValue,
-                        selected && styles.timeChipValueSelected,
-                      ]}
-                    >
-                      {slot.value}
-                    </Text>
-                  </Pressable>
-                );
-              })}
-            </View>
+            <ReminderTimePicker
+              value={notificationTime}
+              onChange={setNotificationTime}
+            />
           ) : null}
         </View>
 
@@ -497,42 +463,6 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
     fontSize: 13,
     lineHeight: 20,
-  },
-  timeGrid: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 12,
-  },
-  timeChip: {
-    width: "47%",
-    minWidth: 145,
-    backgroundColor: colors.bgCard,
-    borderRadius: radii.lg,
-    borderWidth: 1,
-    borderColor: colors.border,
-    paddingVertical: 14,
-    paddingHorizontal: 14,
-    gap: 4,
-  },
-  timeChipSelected: {
-    backgroundColor: colors.accentSecondary,
-    borderColor: colors.accentSecondary,
-  },
-  timeChipLabel: {
-    color: colors.textPrimary,
-    fontSize: 14,
-    fontWeight: "600",
-  },
-  timeChipLabelSelected: {
-    color: colors.textPrimary,
-  },
-  timeChipValue: {
-    color: colors.textMuted,
-    fontSize: 13,
-    fontWeight: "500",
-  },
-  timeChipValueSelected: {
-    color: colors.textPrimary,
   },
   statusCard: {
     backgroundColor: colors.bgCard,

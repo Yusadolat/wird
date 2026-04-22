@@ -16,6 +16,7 @@ import { useAppDataStore } from "../store/appDataStore";
 import { useAuthStore } from "../store/authStore";
 import { useOnboardingStore } from "../store/onboardingStore";
 import { useSettingsStore } from "../store/settingsStore";
+import { useWirdStore } from "../store/wirdStore";
 
 const sentryEnvironment =
   (Constants.expoConfig?.extra?.eas as { channel?: string } | undefined)?.channel ??
@@ -42,9 +43,11 @@ export default Sentry.wrap(function RootLayout() {
   const isHydrated = useAuthStore((state) => state.isHydrated);
   const hydrateSettings = useSettingsStore((state) => state.hydrateRemote);
   const userId = useAuthStore((state) => state.userId);
+  const savedPlan = useWirdStore((state) => state.plan);
   const hasCompletedOnboarding = useOnboardingStore(
     (state) => state.hasCompletedOnboarding,
   );
+  const isOnboarded = hasCompletedOnboarding || Boolean(savedPlan);
 
   const topLevelSegment = segments[0];
   const secondSegment = segments.at(1);
@@ -115,13 +118,13 @@ export default Sentry.wrap(function RootLayout() {
   if (
     isSignedIn &&
     !config.skipQuranAuth &&
-    !hasCompletedOnboarding &&
+    !isOnboarded &&
     !isOnboardingRoute
   ) {
     return <Redirect href="/(onboarding)/goal" />;
   }
 
-  if (isSignedIn && hasCompletedOnboarding && (isAuthRoute || isOnboardingRoute)) {
+  if (isSignedIn && isOnboarded && (isAuthRoute || isOnboardingRoute)) {
     return <Redirect href="/(tabs)" />;
   }
 

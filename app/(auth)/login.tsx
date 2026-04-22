@@ -21,7 +21,6 @@ import {
   quranDiscovery,
 } from "../../services/quranAuthService";
 import { useAuthStore } from "../../store/authStore";
-import { useOnboardingStore } from "../../store/onboardingStore";
 
 WebBrowser.maybeCompleteAuthSession();
 
@@ -32,7 +31,6 @@ export default function LoginScreen() {
   const setAuthError = useAuthStore((state) => state.setAuthError);
   const setAuthenticating = useAuthStore((state) => state.setAuthenticating);
   const continueAsGuest = useAuthStore((state) => state.continueAsGuest);
-  const resetOnboarding = useOnboardingStore((state) => state.resetOnboarding);
   const [nonce, setNonce] = useState<string | null>(null);
   const [authUrl, setAuthUrl] = useState<string | null>(null);
   const [verifierReady, setVerifierReady] = useState(false);
@@ -85,7 +83,6 @@ export default function LoginScreen() {
       return;
     }
 
-    resetOnboarding();
     setAuthError(null);
     setAuthenticating(true);
 
@@ -163,7 +160,6 @@ export default function LoginScreen() {
   }
 
   function handleGuestContinue() {
-    resetOnboarding();
     setAuthError(null);
     continueAsGuest();
     router.replace("/(onboarding)/goal");
